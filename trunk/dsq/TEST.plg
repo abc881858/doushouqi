@@ -3,13 +3,13 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
---------------------Configuration: TEST - Win32 Debug--------------------
+--------------------Configuration: TEST - Win32 Release--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating command line "rc.exe /l 0x804 /fo"Debug/TEST.res" /d "_DEBUG" /d "_AFXDLL" "E:\GoogleCode\dsq\TEST.rc"" 
-Creating temporary file "E:\360data\重要数据\用户临~1\RSP60.tmp" with contents
+Creating command line "rc.exe /l 0x804 /fo"Release/TEST.res" /d "NDEBUG" /d "_AFXDLL" "E:\GoogleCode\dsq\TEST.rc"" 
+Creating temporary file "E:\360data\重要数据\用户临~1\RSPFE.tmp" with contents
 [
-/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Debug/" /Fp"Debug/TEST.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+/nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /FR"Release/" /Fp"Release/TEST.pch" /Yu"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
 "E:\GoogleCode\dsq\Getin.cpp"
 "E:\GoogleCode\dsq\hess.cpp"
 "E:\GoogleCode\dsq\MainFrm.cpp"
@@ -21,30 +21,30 @@ Creating temporary file "E:\360data\重要数据\用户临~1\RSP60.tmp" with contents
 "E:\GoogleCode\dsq\TESTDoc.cpp"
 "E:\GoogleCode\dsq\TESTView.cpp"
 ]
-Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSP60.tmp"" 
-Creating temporary file "E:\360data\重要数据\用户临~1\RSP61.tmp" with contents
+Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSPFE.tmp"" 
+Creating temporary file "E:\360data\重要数据\用户临~1\RSPFF.tmp" with contents
 [
-/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Debug/" /Fp"Debug/TEST.pch" /Yc"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+/nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /FR"Release/" /Fp"Release/TEST.pch" /Yc"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
 "E:\GoogleCode\dsq\StdAfx.cpp"
 ]
-Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSP61.tmp"" 
-Creating temporary file "E:\360data\重要数据\用户临~1\RSP62.tmp" with contents
+Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSPFF.tmp"" 
+Creating temporary file "E:\360data\重要数据\用户临~1\RSP100.tmp" with contents
 [
-winmm.lib /nologo /subsystem:windows /incremental:yes /pdb:"Debug/TEST.pdb" /debug /machine:I386 /out:"Debug/TEST.exe" /pdbtype:sept 
-.\Debug\Getin.obj
-.\Debug\hess.obj
-.\Debug\MainFrm.obj
-.\Debug\Managers.obj
-.\Debug\Net.obj
-.\Debug\NetControl.obj
-.\Debug\Server.obj
-.\Debug\StdAfx.obj
-.\Debug\TEST.obj
-.\Debug\TESTDoc.obj
-.\Debug\TESTView.obj
-.\Debug\TEST.res
+dxguid.lib winmm.lib /nologo /subsystem:windows /incremental:no /pdb:"Release/TEST.pdb" /machine:I386 /out:"Release/TEST.exe" 
+.\Release\Getin.obj
+.\Release\hess.obj
+.\Release\MainFrm.obj
+.\Release\Managers.obj
+.\Release\Net.obj
+.\Release\NetControl.obj
+.\Release\Server.obj
+.\Release\StdAfx.obj
+.\Release\TEST.obj
+.\Release\TESTDoc.obj
+.\Release\TESTView.obj
+.\Release\TEST.res
 ]
-Creating command line "link.exe @"E:\360data\重要数据\用户临~1\RSP62.tmp""
+Creating command line "link.exe @"E:\360data\重要数据\用户临~1\RSP100.tmp""
 <h3>Output Window</h3>
 Compiling resources...
 Compiling...
@@ -62,9 +62,6 @@ TESTDoc.cpp
 TESTView.cpp
 Generating Code...
 Linking...
-Creating command line "bscmake.exe /nologo /o"Debug/TEST.bsc"  .\Debug\StdAfx.sbr .\Debug\Getin.sbr .\Debug\hess.sbr .\Debug\MainFrm.sbr .\Debug\Managers.sbr .\Debug\Net.sbr .\Debug\NetControl.sbr .\Debug\Server.sbr .\Debug\TEST.sbr .\Debug\TESTDoc.sbr .\Debug\TESTView.sbr"
-Creating browse info file...
-<h3>Output Window</h3>
 
 
 
