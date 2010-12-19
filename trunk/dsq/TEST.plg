@@ -7,7 +7,7 @@
 </h3>
 <h3>Command Lines</h3>
 Creating command line "rc.exe /l 0x804 /fo"Release/TEST.res" /d "NDEBUG" /d "_AFXDLL" "E:\GoogleCode\dsq\TEST.rc"" 
-Creating temporary file "E:\360data\重要数据\用户临~1\RSPFE.tmp" with contents
+Creating temporary file "E:\360data\重要数据\用户临~1\RSP2.tmp" with contents
 [
 /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /FR"Release/" /Fp"Release/TEST.pch" /Yu"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
 "E:\GoogleCode\dsq\Getin.cpp"
@@ -21,14 +21,14 @@ Creating temporary file "E:\360data\重要数据\用户临~1\RSPFE.tmp" with contents
 "E:\GoogleCode\dsq\TESTDoc.cpp"
 "E:\GoogleCode\dsq\TESTView.cpp"
 ]
-Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSPFE.tmp"" 
-Creating temporary file "E:\360data\重要数据\用户临~1\RSPFF.tmp" with contents
+Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSP2.tmp"" 
+Creating temporary file "E:\360data\重要数据\用户临~1\RSP3.tmp" with contents
 [
 /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /FR"Release/" /Fp"Release/TEST.pch" /Yc"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
 "E:\GoogleCode\dsq\StdAfx.cpp"
 ]
-Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSPFF.tmp"" 
-Creating temporary file "E:\360data\重要数据\用户临~1\RSP100.tmp" with contents
+Creating command line "cl.exe @"E:\360data\重要数据\用户临~1\RSP3.tmp"" 
+Creating temporary file "E:\360data\重要数据\用户临~1\RSP4.tmp" with contents
 [
 dxguid.lib winmm.lib /nologo /subsystem:windows /incremental:no /pdb:"Release/TEST.pdb" /machine:I386 /out:"Release/TEST.exe" 
 .\Release\Getin.obj
@@ -44,7 +44,7 @@ dxguid.lib winmm.lib /nologo /subsystem:windows /incremental:no /pdb:"Release/TE
 .\Release\TESTView.obj
 .\Release\TEST.res
 ]
-Creating command line "link.exe @"E:\360data\重要数据\用户临~1\RSP100.tmp""
+Creating command line "link.exe @"E:\360data\重要数据\用户临~1\RSP4.tmp""
 <h3>Output Window</h3>
 Compiling resources...
 Compiling...
