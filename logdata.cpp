@@ -1,7 +1,6 @@
 #include "logdata.h"
 #include <QFile>
 #include <QTextStream>
-#include <QDebug>
 
 Q_GLOBAL_STATIC(LogData, logData)
 
@@ -12,16 +11,6 @@ LogData *LogData::instance()
 
 void LogData::setupSeries()
 {
-    allLines.clear();
-    data_vehicle_vxy.clear();
-    data_vehicle_ax.clear();
-    data_vehicle_yawrate.clear();
-    data_record_vxy.clear();
-    data_record_ax.clear();
-    data_record_yawrate.clear();
-    data_front_wheel_angle.clear();
-    data_record_wheel_angle.clear();
-
     QFile file(fileName);
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream text_stream(&file);
@@ -40,15 +29,14 @@ void LogData::setupSeries()
 
             QString x_string = msg_list.at(0);
             QString right_string = x_string.right(10);
-            double x = right_string.toLongLong()/1000000.0 - beginTime;
 
             if(!msg_list.isEmpty() && msg_list.size()>=2)
             {
                 QString left_string = right_string.left(4); //to do:
                 if(begin)
                 {
+                    year_string = msg_list.at(0).left(6);
                     beginTime = left_string.toInt();
-//                    qDebug() << "beginTime= " << beginTime;
                     begin = false;
                 }
                 else
@@ -58,12 +46,20 @@ void LogData::setupSeries()
                     {
                         endTime = end;
                     }
-//                    qDebug() << "currentTime= " << endTime;
                 }
 
-//                qDebug() << msg_list;
+                QString endTimeStamp_string = first_string.split(" ").last();
+                QStringList endTimeStamp_list = endTimeStamp_string.split(":");
+                QString hour = endTimeStamp_list.at(0);
+                QString minute = endTimeStamp_list.at(1);
+                QString second = endTimeStamp_list.at(2);
+                endTimeStamp = (hour.toInt() * 60 + minute.toInt()) * 60 + second.toInt();
+                double x = right_string.toLongLong()/1000000.0 - beginTime;
+                videoStamp.insert(x, endTimeStamp);
+
                 if(msg_list.at(1) == "vehicle motion state")
                 {
+                    lineX << x;
                     QString y1_string = msg_list.at(2); // che su
                     qreal y1 = y1_string.toDouble();
                     QString y2_string = msg_list.at(3); // heng xiang jia su du
@@ -77,14 +73,12 @@ void LogData::setupSeries()
                     QString y6_string = msg_list.at(7);
                     qreal y6 = y6_string.toDouble();
 
-                    data_vehicle_vxy << QPointF(x, y1);
-//                    qDebug() << "data_vehicle_vxy= " << data_vehicle_vxy;
-                    data_vehicle_ax << QPointF(x, y2);
-                    data_vehicle_yawrate << QPointF(x, y3);
-                    data_record_vxy << QPointF(x, y4);
-                    data_record_ax << QPointF(x, y5);
-                    data_record_yawrate << QPointF(x, y6);
-
+                    data_vehicle_vxy << y1;
+                    data_vehicle_ax << y2;
+                    data_vehicle_yawrate << y3;
+                    data_record_vxy << y4;
+                    data_record_ax << y5;
+                    data_record_yawrate << y6;
                 }
                 else if(msg_list.at(1) == "front wheel angle")
                 {
@@ -93,122 +87,96 @@ void LogData::setupSeries()
                     QString y2_string = msg_list.at(3); //real
                     qreal y2 = y2_string.toDouble();
 
-                    data_front_wheel_angle << QPointF(x, y1);
-                    data_record_wheel_angle << QPointF(x, y2);
+                    data_front_wheel_angle << y1;
+                    data_record_wheel_angle << y2;
                 }
 
-                else if(msg_list.at(1) == "back collision ibeo") //null
+                // upabove is LineSeries
+                // now is ScatteSeries
+
+                else if(msg_list.at(1) == "back collision") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    back_collision_ibeo << QPointF(x, y);
+                    if(msg_list.at(2) == "ibeo")
+                    {
+                        back_collision_ibeoX << x;
+                        back_collision_ibeoY << 10.0;
+                    }
+                    else if(msg_list.at(2) == "fusion")
+                    {
+                        back_collision_fusionX << x;
+                        back_collision_fusionY << 20.0;
+                    }
                 }
-                else if(msg_list.at(1) == "front collision ibeo") //null
+                else if(msg_list.at(1) == "front collision") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    front_collision_ibeo << QPointF(x, y);
-                }
-                else if(msg_list.at(1) == "back collision fusion") //null
-                {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    back_collision_fusion << QPointF(x, y);
-                }
-                else if(msg_list.at(1) == "front collision fusion") //null
-                {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    front_collision_fusion << QPointF(x, y);
+                    if(msg_list.at(2) == "ibeo")
+                    {
+                        front_collision_ibeoX << x;
+                        front_collision_ibeoY << 30.0;
+                    }
+                    else if(msg_list.at(2) == "fusion")
+                    {
+                        front_collision_fusionX << x;
+                        front_collision_fusionY << 40.0;
+                    }
                 }
                 else if(msg_list.at(1) == "cutin collision risk") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    cutin_collision_risk << QPointF(x, y);
+                    cutin_collision_riskX << x;
+                    cutin_collision_riskY << 50.0;
                 }
-                else if(msg_list.at(1) == "rear end collision risk") //null
+                else if(QString(msg_list.at(0)).startsWith("collision risk detail")) //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    rear_end_collision_risk << QPointF(x, y);
+                    rear_end_collision_riskX << x;
+                    rear_end_collision_riskY << 60.0;
                 }
                 else if(msg_list.at(1) == "gap")
                 {
-                    QString y_string = msg_list.at(3);
-                    qreal y = y_string.toDouble();
-                    gap << QPointF(x, y);
+                    gapX << x;
+                    gapY << 70.0;
                 }
-                else if(msg_list.at(1) == "start timestamp") //null
+                else if(msg_list.at(1) == "start_timestamp") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    start_timestamp << QPointF(x, y);
-                }
-                else if(msg_list.at(1) == "footfault hdmap") //null
-                {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    footfault_hdmap << QPointF(x, y);
+                    start_timestampX << x;
+                    start_timestampY << 80.0;
                 }
                 else if(msg_list.at(1) == "footfault")
                 {
                     if(msg_list.at(2) == "detect")
                     {
-                        QString y_string = msg_list.at(4);
-                        qreal y = y_string.toDouble();
-                        footfault_dectect << QPointF(x, y);
+                        footfault_dectectX << x;
+                        footfault_dectectY << 90.0;
+                    }
+                    else if(msg_list.at(2) == "hdmap") //null
+                    {
+                        footfault_hdmapX << x;
+                        footfault_hdmapY << 100.0;
                     }
                 }
                 else if(msg_list.at(1) == "acc difference found") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    acc_difference << QPointF(x, y);
+                    acc_differenceX << x;
+                    acc_differenceY << 110.0;
                 }
                 else if(msg_list.at(1) == "angle difference found") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    angle_difference << QPointF(x, y);
+                    angle_differenceX << x;
+                    angle_differenceY << 120.0;
                 }
                 else if(msg_list.at(1) == "take over request") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    take_over_request << QPointF(x, y);
+                    take_over_requestX << x;
+                    take_over_requestY << 130.0;
                 }
                 else if(msg_list.at(1) == "quit take over") //null
                 {
-                    QString y_string = msg_list.at(2);
-                    qreal y = y_string.toDouble();
-                    quit_take_over << QPointF(x, y);
+                    quit_take_overX << x;
+                    quit_take_overY << 140.0;
                 }
             }
         }
     }
 
-    allLines << data_vehicle_vxy
-             << data_vehicle_ax
-             << data_vehicle_yawrate
-             << data_record_vxy
-             << data_record_ax
-             << data_record_yawrate
-             << data_front_wheel_angle
-             << data_record_wheel_angle
+    file.close();
 
-             << back_collision_ibeo
-             << front_collision_ibeo
-             << back_collision_fusion
-             << front_collision_fusion
-             << cutin_collision_risk
-             << rear_end_collision_risk
-             << gap
-             << start_timestamp
-             << footfault_hdmap
-             << footfault_dectect
-             << acc_difference
-             << angle_difference
-             << take_over_request
-             << quit_take_over;
 }
