@@ -1,47 +1,110 @@
 #include "mainwindow.h"
-
-#include "createtable.h"
-#include "logdata.h"
-#include "leftwidget.h"
-
-#include <QToolBar>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QFormLayout>
 #include <QAction>
 #include <QCheckBox>
 #include <QFileDialog>
-#include <QDebug>
-#include <QPointF>
+#include <QFormLayout>
+#include <QHBoxLayout>
+#include <QInputDialog>
 #include <QMenu>
-
-#include <QtWebEngineWidgets/QWebEngineView>
+#include <QPointF>
+#include <QScrollArea>
+#include <QSize>
+#include <QToolBar>
+#include <QVBoxLayout>
+#include "chartwidget.h"
+#include "createtable.h"
+#include "duration.h"
+#include "leftwidget.h"
+#include "logdata.h"
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), m_duration(0)
 {
+    // tool bar
     QToolBar *tool = new QToolBar(this);
     tool->setMovable(false);
 
-    //load log file
-    QAction *action1 = tool->addAction("load...");
-    connect(action1, &QAction::triggered, [=](){
+    // load log file
+    QAction *loadLogAction = tool->addAction("load...");
+
+    // show CreateTable
+    QAction *chartViewAction = tool->addAction("charts");
+    chartViewAction->setDisabled(true);
+
+    connect(loadLogAction, &QAction::triggered, [=](){
         LogData::instance()->fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "./", tr("log (*.log)"));
-        LogData::instance()->setupSeries();
+
         if(!LogData::instance()->fileName.isEmpty())
         {
-            left->setEnabled(true);
+            LogData::instance()->setupSeries();
+            leftStack->setEnabled(true);
+            chartViewAction->setEnabled(true);
         }
     });
 
-    QAction *action2 = tool->addAction("charts");
+    QAction *loadMediaAction = tool->addAction("load media...");
 
-    QWidget *widget = new QWidget(this); //zheng ti jie mian
+    QAction *action3 = tool->addAction("zoom picture");
+    connect(action3, &QAction::triggered, [=](){
+        dialog->show();
+    });
 
-    left = new QStackedWidget(this);
-    left->setStyleSheet("background-color: rgb(165, 165, 165);");
+    QWidget *mainWidget = new QWidget(this); //zheng ti jie mian
+
+    left = new QWidget(this);
     left->setFixedWidth(200);
-    left->setDisabled(true);
+
+    leftStack = new QStackedWidget(left);
+    leftStack->setStyleSheet("background-color: rgb(165, 165, 165);");
+    leftStack->setFixedWidth(200);
+
+    dialog = new QDialog(0);
+    dialog->setFixedSize(1920,1080);
+    QHBoxLayout *hlayout = new QHBoxLayout;
+
+    m_preview = new QtAV::VideoPreviewWidget(dialog);
+    QScrollArea *scroolarea = new QScrollArea(dialog);
+    scroolarea->setWidget(m_preview);
+    hlayout->addWidget(scroolarea);
+    hlayout->setMargin(0);
+    dialog->setLayout(hlayout);
+    dialog->hide();
+
+    connect(m_preview, &QtAV::VideoPreviewWidget::timestampChanged, [=](){
+        pictureLabel->setPixmap(m_preview->grab().scaled(200,150));
+        pictureLabel->update();
+    });
+
+    pictureLabel = new QLabel(left);
+    pictureLabel->setFixedSize(200,150);
+    pictureLabel->hide();
+
+    connect(loadMediaAction, &QAction::triggered, [=](){
+        QString file = QFileDialog::getOpenFileName(this, tr("Open file"), QDir::homePath(), tr("Multimedia files(*)"));
+        if (file.isEmpty())
+        {
+            return;
+        }
+        else
+        {
+            int secondTime = videoinfo_duration(file.toLatin1().data());
+            m_duration = secondTime * 1000; // 后续精确到毫秒
+            m_preview->setFile(file);
+            m_preview->resize(1920,1080);
+            m_preview->setTimestamp(3000);
+            m_preview->preview();
+            pictureLabel->show();
+        }
+    });
+
+    vboxLayout = new QVBoxLayout;
+
+    vboxLayout->addWidget(leftStack);
+    vboxLayout->addWidget(pictureLabel);
+
+    left->setLayout(vboxLayout);
+    vboxLayout->setMargin(0);
 
     gridLayout = new QGridLayout;
 
@@ -57,19 +120,20 @@ MainWindow::MainWindow(QWidget *parent)
     vLayout->addWidget(tool);
     vLayout->addLayout(hLayout);
 
-    widget->setLayout(vLayout);
-    setCentralWidget(widget);
+    mainWidget->setLayout(vLayout);
+    setCentralWidget(mainWidget);
 
     CreateTable *table = new CreateTable(this);
     table->hide();
-    connect(action2, &QAction::triggered, [=](){
+    connect(chartViewAction, &QAction::triggered, [=](){
         table->move(50,30);
         table->show();
     });
+
     //set grid view
     connect(table, &CreateTable::showTable, [=](int row, int column){
-        QList<QWebEngineView*> items = right->findChildren<QWebEngineView*>(QString());
-        for(QWebEngineView *item : items)
+        QList<ChartWidget*> items = right->findChildren<ChartWidget*>(QString());
+        for(ChartWidget *item : items)
         {
             delete item;
         }
@@ -78,19 +142,73 @@ MainWindow::MainWindow(QWidget *parent)
         {
             for (int j = 0; j <= column; ++j)
             {
-                LeftWidget *leftWidget = new LeftWidget();
-                left->addWidget(leftWidget);
+                LeftWidget *leftWidget = new LeftWidget(left);
+                leftStack->addWidget(leftWidget);
 
-                QWebEngineView *chartview = new QWebEngineView();
-                chartview->setStyleSheet(("border:2px solid rgb(195, 195, 195)"));
+                ChartWidget *chartview = new ChartWidget(right, row, column, leftWidget->list);
+                chartview->setStyleSheet("background-color:white;");
                 gridLayout->addWidget(chartview,i,j);
+                connect(chartview, &ChartWidget::mouseClick, [=](double delt){
+                    int stamp = m_duration - delt * 1000;
+                    qDebug() << "current stamp" << m_duration << stamp;
+                    if(stamp > 0)
+                    {
+                        m_preview->setTimestamp(stamp); //后续减少timeStamp次数 410967
+                    }
+                    else
+                    {
+                        m_preview->setTimestamp(0);
+                    }
+                    m_preview->preview();
+                    leftStack->setCurrentWidget(leftWidget);
+                });
+
+                connect(leftWidget, &LeftWidget::openCheck, [=](int openID){
+                    leftWidget->list.append(openID);
+                    ChartWidget *cw = new ChartWidget(this, row, column, leftWidget->list);
+                    gridLayout->replaceWidget(gridLayout->itemAtPosition(i, j)->widget(), cw);
+                    connect(cw, &ChartWidget::mouseClick, [=](double delt){
+                        int stamp = m_duration - delt * 1000;
+                        qDebug() << "current stamp" << m_duration << stamp;
+                        if(stamp > 0)
+                        {
+                            m_preview->setTimestamp(stamp); //后续减少timeStamp次数 410967
+                        }
+                        else
+                        {
+                            m_preview->setTimestamp(0);
+                        }
+                        m_preview->preview();
+                        leftStack->setCurrentWidget(leftWidget);
+                    });
+                });
+
+                connect(leftWidget, &LeftWidget::closeCheck, [=](int closeID){
+                    leftWidget->list.removeOne(closeID);
+                    ChartWidget *cw = new ChartWidget(this, row, column, leftWidget->list);
+                    gridLayout->replaceWidget(gridLayout->itemAtPosition(i, j)->widget(), cw);
+                    connect(cw, &ChartWidget::mouseClick, [=](double delt){
+                        int stamp = m_duration - delt * 1000;
+                        qDebug() << "current stamp" << m_duration << stamp;
+                        if(stamp > 0)
+                        {
+                            m_preview->setTimestamp(stamp); //后续减少timeStamp次数 410967
+                        }
+                        else
+                        {
+                            m_preview->setTimestamp(0);
+                        }
+                        m_preview->preview();
+                        leftStack->setCurrentWidget(leftWidget);
+                    });
+                });
             }
         }
+
     });
 
-
     resize(800,600);
-    setWindowTitle("Analyze");
+    setWindowTitle("Log Viewer");
 }
 
 MainWindow::~MainWindow()
